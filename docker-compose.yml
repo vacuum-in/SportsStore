@@ -1,0 +1,40 @@
+version: '3.4'
+
+services:
+  sportsstore:
+    image: ${DOCKER_REGISTRY-}sportsstore
+    build:
+      context: .
+    depends_on:
+       - sqlserver
+    ports:
+     - "80"
+    networks:
+      - back-tier
+
+  sqlserver:
+    image: 'microsoft/mssql-server-linux:2017-latest'
+    hostname: 'sqlserver'
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: 'PASS123opopoopop'
+      MSSQL_PID: Developer
+    ports:
+      - "1433"
+    networks:
+      - back-tier
+  loadbalancer:
+    image: 'dockercloud/haproxy:latest'
+    links:
+      - sportsstore
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8080:80
+    networks:
+      - front-tier
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
